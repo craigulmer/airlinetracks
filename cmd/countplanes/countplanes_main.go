@@ -11,27 +11,27 @@ func readFile(fname string, carrier string, region string, verbose bool){
 
 	var trdr *atx.TrackReader
 	var err error
-
+	var op_name string
 	if carrier!="" && region!="" {
 		panic("Currently, can only filter on ONE thing")
 	}
 
-
-	if carrier=="" {
-
-		if region=="" {
-			trdr, err = atx.Open(fname)
-		} else {
-			trdr, err = atx.OpenWithFilter(fname, atx.NewFilterByRegion(region))
-		}
-	} else {
-		trdr, err = atx.OpenWithFilter(fname, atx.NewFilterByCarrier(carrier))
+	switch {
+	case region!="":  
+		trdr, err = atx.OpenWithFilter(fname, atx.NewFilterByRegion(region));
+		op_name="Region: "+region
+	case carrier!="": 
+		trdr, err = atx.OpenWithFilter(fname, atx.NewFilterByCarrier(carrier)); 
+		op_name="Carrier: "+carrier
+	default:          
+		trdr, err = atx.Open(fname)
 	}
 	if err!=nil {
 		fmt.Println("Error opening "+fname)
 		return
 	}
 
+	//Walk through each track until nothing left
 	for {
 		track,_ := trdr.GetNext()
 		if track==nil { break }
@@ -41,7 +41,7 @@ func readFile(fname string, carrier string, region string, verbose bool){
 	}
 
 	//Stats are maintained in the reader
-	fmt.Println("ValidTracks:",trdr.ValidTracks,"TotalTracks:",trdr.TotalTracks, "CarrierFilter: '"+carrier+"'")
+	fmt.Println("ValidTracks:",trdr.ValidTracks,"TotalTracks:",trdr.TotalTracks, op_name)
 	trdr.Close()
 }
 
