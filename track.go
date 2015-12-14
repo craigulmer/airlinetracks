@@ -20,28 +20,6 @@ type Track struct {
 	//meta []meta_labels
 }
 
-type TrackFilterVariable int
-const (
-	NONE TrackFilterVariable = iota 
-	FID 
-	FIN
-	AID
-	//TRACK
-)
-type TrackFilterOp int
-const (
-	NOP TrackFilterOp = iota
-	BEGINS_WITH 
-	EQUALS
-	ENDS_WITH
-	CONTAINS
-)
-
-type TrackFilter struct {
-	Search_var  TrackFilterVariable
-	Search_op   TrackFilterOp
-	Search_term string
-}
 
 
 
@@ -71,30 +49,10 @@ func ParseTrackLine(line string, filter TrackFilter) (*Track,error) {
 	if t.fin == "" { t.fin = "-" }
 	if t.fid == "" { t.fid = "-" }
 
-	if filter.Search_var != NONE && filter.Search_op != NOP {
-		var var_val string
-		switch filter.Search_var {
-		case FID: var_val = t.fid
-		case FIN: var_val = t.fin
-		case AID: var_val = t.aid
-		default:
-			panic("Unknown type in filter search")
-		}
-
-		//fmt.Println("Compare "+var_val+" to "+filter.Search_term)
-		var hit bool
-		switch filter.Search_op {
-		case BEGINS_WITH: hit = strings.HasPrefix(var_val, filter.Search_term)
-		case EQUALS:      hit = var_val==filter.Search_term
-		case ENDS_WITH:   hit = strings.HasSuffix(var_val, filter.Search_term)
-		case CONTAINS:    hit = strings.Contains(var_val, filter.Search_term)
-		default:
-			panic("Unknown type in filter op")
-		}
-
-		if(!hit){
-			return nil,nil
-		}
+	//Check meta filter params, bail if no hit
+	hit := t.MetaFilterMatch(filter)
+	if(!hit){
+		return nil,nil
 	}
 
 
@@ -107,6 +65,11 @@ func ParseTrackLine(line string, filter TrackFilter) (*Track,error) {
 		t.points[i].ParsePoint(point_string)
 	}
 	
+	//Examine points
+	hit = t.PointFilterMatch(filter)
+	if !hit {
+		return nil,nil
+	}
 
 	return t,nil
 }
