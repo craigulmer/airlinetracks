@@ -1,6 +1,7 @@
 package airlinetracks
 
 import (
+	"fmt"
 	"strings"
 	"strconv"
 	"math"
@@ -18,6 +19,9 @@ func (p *point) ParsePoint(s string) {
 	p.y,_ =strconv.ParseFloat(sa[1],64)
 	p.z,_ =strconv.ParseFloat(sa[2],64)
 	p.t,_ =strconv.ParseInt(sa[3],0,32)
+}
+func (p *point) ToString() string {
+	return fmt.Sprintf("%f %f %f %d", p.x, p.y, p.z, p.t)
 }
 
 func ParsePoint(s string) point{

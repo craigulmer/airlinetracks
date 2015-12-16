@@ -2,6 +2,7 @@ package airlinetracks
 
 import (
 	"fmt"
+	"bytes"
 	"strings"
 )
 
@@ -21,6 +22,21 @@ type Track struct {
 }
 
 
+func (t *Track) GetWKT() string {
+	var buffer bytes.Buffer
+	buffer.WriteString("LINESTRING (")
+	is_first := true
+	for _,p :=range t.points {
+		if(!is_first){
+			buffer.WriteString(", ")
+		} else {
+			is_first = false
+		}
+		buffer.WriteString(p.ToString())
+	}
+	buffer.WriteString(")")
+	return buffer.String()
+}
 
 
 func (t *Track) ToString() string{
