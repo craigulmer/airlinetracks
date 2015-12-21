@@ -6,27 +6,35 @@ import (
 	"strings"
 )
 
-//type meta_labels struct {
-//	first_track_id int
-//	flt string
-//	src string
-//	dst string
-//}
+type Meta struct {
+	First_point_id int
+	Flt string
+	Src string
+	Dst string
+}
+
 
 type Track struct {
-	aid string //Hex AID code for plane
-	fin string //Tailfin for plane
-	fid string //Airline's flight id
-	points []point
-	//meta []meta_labels
+	Aid string //Hex AID code for plane
+	Fin string //Tailfin for plane
+	Fid string //One of Airline's flight id
+	Points []Point
+	Meta []Meta
 }
+
+type Tracks []*Track
+func (t Tracks) Len() int { return len(t)}
+func (t Tracks) Swap(i,j int) { t[i],t[j] = t[j], t[i] }
+
+type ByAID struct { Tracks }
+func (t ByAID) Less(i,j int) bool {return t.Tracks[i].Aid < t.Tracks[j].Aid }
 
 
 func (t *Track) GetWKT() string {
 	var buffer bytes.Buffer
 	buffer.WriteString("LINESTRING (")
 	is_first := true
-	for _,p :=range t.points {
+	for _,p :=range t.Points {
 		if(!is_first){
 			buffer.WriteString(", ")
 		} else {
@@ -40,8 +48,8 @@ func (t *Track) GetWKT() string {
 
 
 func (t *Track) ToString() string{
-	return "AID: "+t.aid+" FIN: "+t.fin+" FID: "+t.fid+
-		fmt.Sprintf(" NumPoints: %v",len(t.points))
+	return "AID: "+t.Aid+" FIN: "+t.Fin+" FID: "+t.Fid+
+		fmt.Sprintf(" NumPoints: %v",len(t.Points))
 }
 func ParseTrackLine(line string, filter TrackFilter) (*Track,error) {
 	t := new(Track)
@@ -58,12 +66,12 @@ func ParseTrackLine(line string, filter TrackFilter) (*Track,error) {
 	//Parse middle chunk, separated by |
 	s_split := strings.Split(prefix,"\t")
 	hdr_args := strings.Split(s_split[1],"|")
-	t.aid = strings.TrimSpace(hdr_args[0])
-	t.fin = strings.TrimSpace(hdr_args[1])
-	t.fid = strings.TrimSpace(hdr_args[2])
-	if t.aid == "" { t.aid = "-" }
-	if t.fin == "" { t.fin = "-" }
-	if t.fid == "" { t.fid = "-" }
+	t.Aid = strings.TrimSpace(hdr_args[0])
+	t.Fin = strings.TrimSpace(hdr_args[1])
+	t.Fid = strings.TrimSpace(hdr_args[2])
+	if t.Aid == "" { t.Aid = "-" }
+	if t.Fin == "" { t.Fin = "-" }
+	if t.Fid == "" { t.Fid = "-" }
 
 	//Check meta filter params, bail if no hit
 	hit := t.MetaFilterMatch(filter)
@@ -76,12 +84,12 @@ func ParseTrackLine(line string, filter TrackFilter) (*Track,error) {
 	s:=strings.TrimSpace(wkt)
 	s=strings.TrimSuffix(s,")")
 	subs:=strings.Split(s,",")
-	t.points = make([]point, len(subs),len(subs))
+	t.Points = make([]Point, len(subs),len(subs))
 	for i,point_string := range subs {
-		t.points[i].ParsePoint(point_string)
+		t.Points[i].ParsePoint(point_string)
 	}
 	
-	//Examine points
+	//Examine Points
 	hit = t.PointFilterMatch(filter)
 	if !hit {
 		return nil,nil

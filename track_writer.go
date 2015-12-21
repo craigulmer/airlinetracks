@@ -43,7 +43,7 @@ func (tw *TrackWriter) Close(){
 func (tw *TrackWriter) Append(t *Track){
 
 	s := fmt.Sprintf("%d\t%s|%s|%s\t%s\n",
-		len(t.points),t.aid,t.fin,t.fid,
+		len(t.Points),t.Aid,t.Fin,t.Fid,
 		t.GetWKT())
 	tw.wr.WriteString(s)
 }

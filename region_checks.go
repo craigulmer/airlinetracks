@@ -4,44 +4,44 @@ package airlinetracks
 
 
 
-func (t Track) AnyPointsOutsideOfRegion2D(lleft point, uright point) (bool){
-	for _,v := range t.points {
-		if (lleft.x > v.x) || (uright.x < v.x) ||
-			(lleft.y > v.y) || (uright.y < v.y) {
+func (t Track) AnyPointsOutsideOfRegion2D(lleft Point, uright Point) (bool){
+	for _,v := range t.Points {
+		if (lleft.X > v.X) || (uright.X < v.X) ||
+			(lleft.Y > v.Y) || (uright.Y < v.Y) {
 			return true		
 		}
 	}
 	return false
 }
 
-func (t Track) AnyPointsInsideRegion2D(lleft point, uright point) (bool){
-	for _,v := range t.points {
-		if (lleft.x <= v.x) && (uright.x >= v.x) &&
-			(lleft.y <= v.y) && (uright.y >= v.y) {
+func (t Track) AnyPointsInsideRegion2D(lleft Point, uright Point) (bool){
+	for _,v := range t.Points {
+		if (lleft.X <= v.X) && (uright.X >= v.X) &&
+			(lleft.Y <= v.Y) && (uright.Y >= v.Y) {
 			return true		
 		}
 	}
 	return false
 }
 
-func (t Track) AnyPointsInsideRegion3D(lleft point, uright point) (bool){
-	for _,v := range t.points {
-		if (lleft.x <= v.x) && (uright.x >= v.x) &&
-			(lleft.y <= v.y) && (uright.y >= v.y) &&
-			(lleft.z <= v.z) && (uright.z >= v.z) {
+func (t Track) AnyPointsInsideRegion3D(lleft Point, uright Point) (bool){
+	for _,v := range t.Points {
+		if (lleft.X <= v.X) && (uright.X >= v.X) &&
+			(lleft.Y <= v.Y) && (uright.Y >= v.Y) &&
+			(lleft.Z <= v.Z) && (uright.Z >= v.Z) {
 			return true
 		}
 	}
    return false
 }
 
-func GetNamedRegionBoundingBox(name string) (point, point) {
+func GetNamedRegionBoundingBox(name string) (Point, Point) {
 	switch name {
-	case "cuba"      : return point{x:-84.957428,y:19.828079}, point{x:-74.131783,y:23.283779}
-	case "usa-main"  : return point{x:-124.98,   y:23.65},     point{x:-66.88,    y:49.21}
+	case "cuba"      : return Point{X:-84.957428,Y:19.828079}, Point{X:-74.131783,Y:23.283779}
+	case "usa-main"  : return Point{X:-124.98,   Y:23.65},     Point{X:-66.88,    Y:49.21}
 	default:
 		panic("Unknow bounding box "+name)
 	}
-	return point{},point{} //Not called
+	return Point{},Point{} //Not called
 
 }

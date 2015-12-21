@@ -27,8 +27,8 @@ type TrackFilter struct {
 	Search_var  TrackFilterVariable
 	Search_op   TrackFilterOp
 	Search_term string
-	lleft       point
-	uright      point
+	lleft       Point
+	uright      Point
 }
 func NewFilterByCarrier(carrier string) TrackFilter{
 	return TrackFilter{Search_var:FID, Search_op:BEGINS_WITH, Search_term:carrier }
@@ -45,9 +45,9 @@ func (t *Track) MetaFilterMatch(filter TrackFilter) bool {
 
 	var var_val string
 	switch filter.Search_var {
-	case FID: var_val = t.fid
-	case FIN: var_val = t.fin
-	case AID: var_val = t.aid
+	case FID: var_val = t.Fid
+	case FIN: var_val = t.Fin
+	case AID: var_val = t.Aid
 	case TRACK: return true
 	default:
 		panic("Unknown type in filter search")
