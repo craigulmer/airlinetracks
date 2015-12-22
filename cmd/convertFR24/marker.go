@@ -25,6 +25,11 @@ func (m Markers) Swap(i,j int) { m[i],m[j] = m[j],m[i] }
 type byTime struct{ Markers }
 func (m byTime) Less(i,j int) bool { return m.Markers[i].ts < m.Markers[j].ts }
 
+func (m1 marker) ToString() string {
+	return fmt.Sprintf("%d\t%f\t%f\t%f\t%s\t%s", m1.ts, m1.lat, m1.lon, m1.alt, m1.fin, m1.fid)
+}
+
+
 func (m1 *marker) MetaIsSame(m2 *marker) bool {
 	return m1.src==m2.src &&
 		m1.dst==m2.dst &&
@@ -56,7 +61,7 @@ func (m Markers) ToATXTrack(aid string) *atx.Track {
 }
 
 
-func (m Markers) Dump(id int) {
+func (m Markers) ToString(id int) {
 	for _,o := range m {
 		fmt.Printf("%d\t%d\t%f\t%f\t%d\n", id, o.ts, o.lat, o.lon, o.alt);
 	}

@@ -23,7 +23,7 @@ package main
 
 import (
 	"fmt"
-	//"bytes"
+	"strings"
 	"sort"
 	"os"
 	"flag"
@@ -33,7 +33,10 @@ import (
 	
 )
 
-func parseFile(src_file string, mm map[string]Markers) {
+func parseFile(src_file string, mm map[string]Markers) (int,int) {
+
+	discarded:=0
+	imported:=0
 
 	fi, err := os.Open(src_file);
 	if err != nil { panic(err) }
@@ -49,6 +52,7 @@ func parseFile(src_file string, mm map[string]Markers) {
 		if err:= dec.Decode(&entries); err != nil { break } // panic(err) }
 			
 		for ref := range entries {
+			//Ref is json id
 			if ref == "full_count" { continue }
 			if ref == "version"    { continue }
 
@@ -62,24 +66,36 @@ func parseFile(src_file string, mm map[string]Markers) {
 				alt: vals[4].(float64),
 				src: vals[11].(string),
 				dst: vals[12].(string),
-				fid: vals[13].(string), //airline code
+				fid: vals[13].(string),  //airline code
 				fin: vals[9].(string) }  //registration
 
 			flabel := vals[0].(string); //aid
-			marker_array := mm[ flabel ]; //ref
-			mm[ flabel ] = append(marker_array, &new_marker);
+			if flabel=="" {
+				fmt.Println("bad point:" +new_marker.ToString())
+				discarded++
+			} else {
+				//fmt.Println("ok  '"+flabel+"' -- '"+ref+"'")
+				marker_array := mm[ flabel ]; //ref
+				mm[ flabel ] = append(marker_array, &new_marker)
+				imported++
+			}
 		}
 	}
+	return discarded,imported
 }
 
 func parseDayDirectory(src_dir string, dst_file_name string){
 
+	discarded:=0
+	imported:=0
 	mm:=make(map[string]Markers);
 	
 	files,_ := ioutil.ReadDir(src_dir)
 	for _,f := range files {
-		parseFile(src_dir+"/"+f.Name(), mm)
-		fmt.Println("mm size: ",len(mm))
+		bad,ok := parseFile(src_dir+"/"+f.Name(), mm)
+		discarded+=bad
+		imported+=ok
+		fmt.Println("mm size: ",len(mm), " Total Ok: ",imported,"Total Discarded: ", discarded)
 	}
 
 	
@@ -93,25 +109,39 @@ func parseDayDirectory(src_dir string, dst_file_name string){
 		fmt.Println(tracks[spot].ToString())
 		spot++
 	}
+
+	fmt.Println("Total Ok:", imported,"Total Discarded:",discarded)
 	
 	sort.Sort(atx.ByAID{tracks})
-	for _,v := range tracks {
-		fmt.Println(v.ToString())
 
+
+	tw,err:=atx.OpenWriter(dst_file_name)
+	if err!=nil {
+		fmt.Println("Error opening output file",dst_file_name,err)
+		return
 	}
-
-
+	for _,t := range tracks {
+		//fmt.Println(v.ToString())
+		tw.Append(t)
+	}
+	tw.Close()
+	
 }
 
 
+func makeOutputFilename(idir string, odir string) string {
+	args := strings.Split(idir, "/")
+	return odir+"/"+args[len(args)-1]+".gz"
+}
 
 func main(){
 
 	
 	var idir = flag.String("input", "data/2014-03-31", "Input Directory")
-	var odir = flag.String("output", "stdout", "Output Directory")
+	var odir = flag.String("output", "./", "Output Directory")
 	flag.Parse()
 	fmt.Println("Input Directory: "+*idir+" Output Directory: "+*odir)
 	
-	parseDayDirectory(*idir, *odir)
+	fmt.Println("Val is "+makeOutputFilename(*idir,*odir))
+	parseDayDirectory(*idir, makeOutputFilename(*idir, *odir))
 }
