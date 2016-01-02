@@ -33,10 +33,11 @@ import (
 	
 )
 
-func parseFile(src_file string, mm map[string]Markers) (int,int) {
+func parseFile(src_file string, mm map[string]Markers, fin2aid map[string]string) (int,int,int) {
 
 	discarded:=0
 	imported:=0
+	repaired:=0
 
 	fi, err := os.Open(src_file);
 	if err != nil { panic(err) }
@@ -59,6 +60,22 @@ func parseFile(src_file string, mm map[string]Markers) (int,int) {
 			//fmt.Println(f.Name()+" "+ref);
 			vals:=entries[ref].([]interface{})
 
+			aid := vals[0].(string); //aid
+			fin := vals[9].(string); //fin
+
+
+			if aid=="" {
+				prv_aid,found := fin2aid[fin]
+				if !found {
+					discarded++
+					continue
+				}
+				aid=prv_aid
+				repaired++
+			} else {
+				imported++
+			}
+				
 			new_marker := marker{
 				ts:  int64(vals[10].(float64)), 
 				lat: vals[1].(float64),
@@ -67,35 +84,31 @@ func parseFile(src_file string, mm map[string]Markers) (int,int) {
 				src: vals[11].(string),
 				dst: vals[12].(string),
 				fid: vals[13].(string),  //airline code
-				fin: vals[9].(string) }  //registration
+				fin: fin }               //registration
 
-			flabel := vals[0].(string); //aid
-			if flabel=="" {
-				fmt.Println("bad point:" +new_marker.ToString())
-				discarded++
-			} else {
-				//fmt.Println("ok  '"+flabel+"' -- '"+ref+"'")
-				marker_array := mm[ flabel ]; //ref
-				mm[ flabel ] = append(marker_array, &new_marker)
-				imported++
-			}
+			fin2aid[fin] = aid
+			marker_array := mm[ aid ]; //ref
+			mm[ aid ] = append(marker_array, &new_marker)
 		}
 	}
-	return discarded,imported
+	return discarded,imported,repaired
 }
 
 func parseDayDirectory(src_dir string, dst_file_name string){
 
 	discarded:=0
 	imported:=0
-	mm:=make(map[string]Markers);
+	repaired:=0
+	mm:=make(map[string]Markers)
+	fin2aid:=make(map[string]string)
 	
 	files,_ := ioutil.ReadDir(src_dir)
 	for _,f := range files {
-		bad,ok := parseFile(src_dir+"/"+f.Name(), mm)
+		bad,ok,fixed := parseFile(src_dir+"/"+f.Name(), mm, fin2aid)
 		discarded+=bad
 		imported+=ok
-		fmt.Println("mm size: ",len(mm), " Total Ok: ",imported,"Total Discarded: ", discarded)
+		repaired+=fixed
+		fmt.Println("mm size: ",len(mm), " Total Ok: ",imported,"Total Discarded: ", discarded,"Total Repaired: ", repaired)
 	}
 
 	
